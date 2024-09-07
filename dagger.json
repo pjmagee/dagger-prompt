@@ -1,0 +1,10 @@
+{
+  "name": "prompt",
+  "sdk": "python",
+  "exclude": [
+    ".venv",
+    ".idea"
+  ],
+  "source": ".",
+  "engineVersion": "v0.12.7"
+}
