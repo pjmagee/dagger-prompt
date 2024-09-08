@@ -16,45 +16,40 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 )
 
 type Examples struct{}
 
-func (m *Examples) Prompt_Choice() (string, error) {
+// Prompt_Choice is a function that demonstrates how to use the Prompt() function
+func (m *Examples) Prompt_Choice() string {
 
 	result := dag.Prompt().
-		WithChoices([]string{"Option 1", "Option 2", "Option 3"}).
-		WithMsg("Select an option").
-		WithInput("Option 2").
-		WithCi(false).
+		WithChoices([]string{"Option 1", "Option 2", "Option 3"}). // A list of custom choices
+		WithMsg("Select an option").                               // A custom message for the prompt
+		WithInput("Option 2").                                     // pass in from the ci pipeline
+		WithCi(false).                                             // disabled ci mode will open a terminal prompt
 		Execute()
 
-	outcome, _ := result.Outcome(context.Background())
-	input, _ := result.Input(context.Background())
+	outcome, _ := result.Outcome(context.Background()) // true or false if input was a valid choice
+	input, _ := result.Input(context.Background())     // The selected choice
 
-	return dag.Container().
-		From("alpine:latest").
-		WithExec([]string{"echo", fmt.Sprintf("Outcome: %s, Choice: %s", strconv.FormatBool(outcome), input)}).
-		Stdout(context.Background())
+	return "Outcome: " + strconv.FormatBool(outcome) + ", Input: " + input
 }
 
-func (m *Examples) Prompt_Input() (string, error) {
+// Prompt_Input is a function that demonstrates how to use the Prompt() function
+func (m *Examples) Prompt_Input() string {
 
 	result := dag.Prompt().
-		WithMsg("Do you want to continue? (y/n)").
-		WithInput("yes").
-		WithMatch("y").
-		WithCi(false).
+		WithMsg("Do you want to continue? (y/n)"). // A custom message for the prompt
+		WithInput("yes").                          // pass in from the ci pipeline
+		WithMatch("y").                            // A custom regex match for the user input
+		WithCi(false).                             // disabled ci mode will open a terminal prompt
 		Execute()
 
-	outcome, _ := result.Outcome(context.Background())
-	input, _ := result.Input(context.Background())
+	outcome, _ := result.Outcome(context.Background()) // true or false if input matched the regex
+	input, _ := result.Input(context.Background())     // The user input
 
-	return dag.Container().
-		From("alpine:latest").
-		WithExec([]string{"echo", fmt.Sprintf("Outcome: %s, Choice: %s", strconv.FormatBool(outcome), input)}).
-		Stdout(context.Background())
+	return "Outcome: " + strconv.FormatBool(outcome) + ", Input: " + input
 
 }
