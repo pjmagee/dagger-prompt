@@ -100,21 +100,20 @@ class Prompt:
         choices_str: str = " ".join(f"\"{choice}\"" for i, choice in enumerate(self.options.choices))
         script = f"""
                     #!/bin/sh
-                    choices=({choices_str})                    
+                    choices=({choices_str})
                     echo "{self.options.msg} (^C to abort)"
                     select choice in "${{choices[@]}}"; do
                         # choice being empty signals invalid input.
                         [[ -n $choice ]] || {{ echo "Invalid choice. Please try again." >&2; continue; }}
                         break # a valid choice was made, exit the prompt.
                     done
-                    echo $choice > /tmp/prompt/input                    
+                    echo $choice > /tmp/prompt/input
                     """
         cache_buster = f"{time.time()}"
         cache = dag.cache_volume(key=cache_buster)
 
         response = await (dag.container()
                           .from_("bash")
-                          .with_exec(["apk", "add", "--no-cache", "ncurses"])
                           .with_mounted_cache(path="/tmp/prompt", cache=cache)
                           .terminal(cmd=["bash", "-c", script])
                           .with_exec(["sh", "-c", f": {cache_buster} && exit 0"])
