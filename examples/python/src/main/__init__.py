@@ -9,31 +9,21 @@ class Examples:
     """Examples of prompts"""
 
     @function
-    async def Prompt_Default(self) -> dagger.Container:
-        prompt: dagger.PromptState = dag.prompt().prompt()  # CI is true by default
-        outcome = await prompt.outcome()  # False because no input was provided
-
-        if outcome:
-            return dag.container().from_("alpine").with_exec(cmd=["echo", "Deploying..."])
-        else:
-            return dag.container().from_("alpine").with_exec(cmd=["echo", "Skipping deployment..."])
+    async def prompt_choices(self) -> str:
+        result = dag.prompt().with_choices(["y", "n"]).prompt() # choices
+        outcome = await result.outcome()  # true or false based on user input
+        input = await result.input()  # the user input
+        return f"Outcome: {outcome}, Input: {input}"
 
     @function
-    async def Prompt_Input(self) -> dagger.Container:
-        prompt: dagger.PromptState = dag.prompt(input="y").prompt()
-        outcome = await prompt.outcome()  # True because input is "y"
+    async def prompt_input(self) -> str:
+        prompt = (dag.prompt()
+                  .with_msg("Do you want to deploy? Enter 'Deploy' to continue") # custom message
+                  .with_input("Deploy") # input from ci pipeline
+                  .with_match("Deploy") # regex match of user input
+                  .with_ci(True) # ci mode, disables terminal prompt
+                  .with_input("y").prompt())
 
-        if outcome:
-            return dag.container().from_("alpine").with_exec(cmd=["echo", "Deploying..."])
-        else:
-            return dag.container().from_("alpine").with_exec(cmd=["echo", "Skipping deployment..."])
-
-    @function
-    async def Prompt_Terminal(self) -> dagger.Container:
-        prompt: dagger.PromptState = dag.prompt(ci=False, msg="Do you want to deploy? (y/n)").prompt()  # Terminal prompt
-        outcome = await prompt.outcome()  # Depending on user input (y/n)
-
-        if outcome:
-            return dag.container().from_("alpine").with_exec(cmd=["echo", "Deploying..."])
-        else:
-            return dag.container().from_("alpine").with_exec(cmd=["echo", "Skipping deployment..."])
+        outcome = await prompt.outcome() # true or false based on user input
+        input = await prompt.input() # the user input
+        return f"Outcome: {outcome}, Input: {input}"
