@@ -3,44 +3,17 @@ import dataclasses
 import time
 import re
 
-from yarl import cache_clear
-
 import dagger
-from dagger import object_type, function, dag, field, CacheSharingMode
+from dagger import object_type, function, dag, field
 
 
 @object_type
 class Options:
-    ci: bool = field(init=False, default=True)
-    msg: str = field(init=False, default="Continue? (y/n)")
-    input: str = field(init=False, default="n")
-    match: str = field(init=False, default="y")
-    choices: list[str] = field(default=list[str], init=False)
-
-    @function
-    def with_choices(self, choices: list[str]) -> "Options":
-        self.choices = choices
-        return self
-
-    @function
-    def with_msg(self, msg: str) -> "Options":
-        self.msg = msg
-        return self
-
-    @function
-    def with_input(self, input: str) -> "Options":
-        self.input = input
-        return self
-
-    @function
-    def with_match(self, match: str) -> "Options":
-        self.match = match
-        return self
-
-    @function
-    def with_ci(self, ci: bool) -> "Options":
-        self.ci = ci
-        return self
+    ci: bool = dataclasses.field(default=True)
+    msg: str = dataclasses.field(default="Continue? (y/n)")
+    input: str = dataclasses.field(default="n")
+    match: str = dataclasses.field(default="y")
+    choices: list[str] = dataclasses.field(default_factory=lambda: [])
 
 
 @object_type
@@ -51,7 +24,23 @@ class Result:
 
 @object_type
 class Prompt:
-    options: Options = field(default=Options, init=False)
+
+    options: Options = dataclasses.field(init=False, default_factory=lambda: Options())
+
+    @function
+    async def with_options(self,
+                           ci: bool = True,
+                           msg: str = "Continue? (y/n)",
+                           input: str = "",
+                           match: str = "y",
+                           choices: list[str] = []) -> "Prompt":
+        self.options = Options(
+            ci=ci,
+            msg=msg,
+            input=input,
+            match=match,
+            choices=choices)
+        return self
 
     @function
     async def with_ci(self, ci: bool) -> "Prompt":
@@ -135,5 +124,7 @@ class Prompt:
                                 .with_exec(["cat", "/tmp/prompt/input"])
                                 .stdout())).strip()
         return Result(
-            outcome=re.search(pattern=self.options.match, string=response) is not None,
+            outcome=re.search(
+                pattern=self.options.match,
+                string=response) is not None,
             input=response)

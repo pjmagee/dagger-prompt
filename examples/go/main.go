@@ -19,37 +19,39 @@ import (
 	"strconv"
 )
 
+// Examples is a struct that contains the functions for the Examples module
 type Examples struct{}
 
 // Prompt_Choice is a function that demonstrates how to use the Prompt() function
-func (m *Examples) Prompt_Choice() string {
-
+func (m *Examples) Prompt_Choice(userInput string) string {
 	result := dag.Prompt().
 		WithChoices([]string{"Option 1", "Option 2", "Option 3"}). // A list of custom choices
 		WithMsg("Select an option").                               // A custom message for the prompt
-		WithInput("Option 2").                                     // pass in from the ci pipeline
-		WithCi(false).                                             // disabled ci mode will open a terminal prompt
+		WithInput(userInput).                                      // pass in from the ci pipeline
+		WithCi(true).                                              // disabled ci mode will open a terminal prompt
 		Execute()
-
 	outcome, _ := result.Outcome(context.Background()) // true or false if input was a valid choice
 	input, _ := result.Input(context.Background())     // The selected choice
+	return "Outcome: " + strconv.FormatBool(outcome) + ", Input: " + input
+}
 
+// Prompt_Options is a function that demonstrates how to use the Prompt() function
+func (m *Examples) Prompt_Options(userInput string, ci bool) string {
+	result := dag.Prompt().WithOptions(ci, "Continue? (y/n)", userInput, "y", []string{}).Execute()
+	outcome, _ := result.Outcome(context.Background()) // true or false if input was a valid choice
+	input, _ := result.Input(context.Background())     // The selected choice
 	return "Outcome: " + strconv.FormatBool(outcome) + ", Input: " + input
 }
 
 // Prompt_Input is a function that demonstrates how to use the Prompt() function
-func (m *Examples) Prompt_Input() string {
-
+func (m *Examples) Prompt_Input(userInput string, ci bool) string {
 	result := dag.Prompt().
 		WithMsg("Do you want to continue? (y/n)"). // A custom message for the prompt
-		WithInput("yes").                          // pass in from the ci pipeline
+		WithInput(userInput).                      // pass in from the ci pipeline
 		WithMatch("y").                            // A custom regex match for the user input
-		WithCi(false).                             // disabled ci mode will open a terminal prompt
+		WithCi(ci).                                // disabled ci mode will open a terminal prompt
 		Execute()
-
 	outcome, _ := result.Outcome(context.Background()) // true or false if input matched the regex
 	input, _ := result.Input(context.Background())     // The user input
-
 	return "Outcome: " + strconv.FormatBool(outcome) + ", Input: " + input
-
 }
