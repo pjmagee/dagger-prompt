@@ -33,7 +33,7 @@ class Prompt:
                            msg: str = "Continue? (y/n)",
                            input: str = "",
                            match: str = "y",
-                           choices: list[str] = []) -> "Prompt":
+                           choices: list[str] = ()) -> "Prompt":
         self.options = Options(
             ci=ci,
             msg=msg,
